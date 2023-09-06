@@ -66,7 +66,7 @@ export class MiddleAITracer {
     }
 
     public endTrace(span: Span, output: string): void {
-        span.setAttribute("output", output)
+        span.setAttribute("llm_output", output)
         span.end()
     }
 }
