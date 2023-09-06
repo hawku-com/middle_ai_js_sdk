@@ -5,7 +5,7 @@ This provides an SDK to trace your JavaScript/TypeScript application calls LLMs
 ## Install
 
 ```bash
-$ npm i https://github.com/hawku/middle_ai_js
+$ npm i https://github.com/hawku/middle_ai_js_sdk
 ```
 
 ## How to use
