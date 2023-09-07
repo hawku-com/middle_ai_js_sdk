@@ -32,7 +32,7 @@ export class MiddleAITracer {
         this._tracer = this._provider.getTracer("MiddleAI")
     }
 
-    public startTrace(name: string, model: string, modelParams: Object, user: string, prompt: string, threadId: string = ""): Span {
+    public startTrace(name: string, model: string, modelParams: Object, user: string, prompt: string, threadId: string, initialPrompt: string = ""): Span {
         const parsedModelParams = this.parseModelParams(modelParams)
 
         const attributes = {
@@ -41,13 +41,14 @@ export class MiddleAITracer {
             user_prompt: prompt,
             application_ref: this._name,
             thread_id: threadId,
+            initialPrompt: initialPrompt,
             ...parsedModelParams
         }
 
         return this._tracer.startSpan(name, { attributes })
     }
 
-    private parseModelParams(modelParams: any, roots: Array<string> = []): Attributes {
+    private parseModelParams(modelParams: any, roots: Array<string> = ["model_params"]): Attributes {
         return Object
             // find props of given object
             .keys(modelParams)
