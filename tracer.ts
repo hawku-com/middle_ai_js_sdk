@@ -4,20 +4,28 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base'
 
+enum FeedbackType {
+    emoji,
+    thumbs,
+    scale
+}
+
 export class MiddleAITracer {
     private _name: string
     private _provider: BasicTracerProvider
     private _tracer: Tracer
+    private _endpoint?: string
+    private _apiKey?: string
 
     public constructor(name: string) {
         this._name = name
 
-        const exporterUrl = process.env.MIDDLE_AI_ENDPOINT
-        const exporterApiKey = process.env.MIDDLE_AI_API_KEY
+        this._endpoint = process.env.MIDDLE_AI_ENDPOINT
+        this._apiKey = process.env.MIDDLE_AI_API_KEY
 
         const exporter = new OTLPTraceExporter({
-            url: `${exporterUrl}/v1/traces`,
-            headers: { 'x-middle-ai-api-key': exporterApiKey },
+            url: `${this._endpoint}/v1/traces`,
+            headers: { 'x-middle-ai-api-key': this._apiKey },
         })
 
         this._provider = new BasicTracerProvider({
@@ -69,5 +77,27 @@ export class MiddleAITracer {
     public endTrace(span: Span, output: string): void {
         span.setAttribute("llm_output", output)
         span.end()
+    }
+
+    public async sendFeedback(threadId: Span, user: Span, type: FeedbackType, feedback: string): Promise<Boolean> {
+        const url = this._endpoint + "/feedback"
+        const data = {
+            "application_ref": this._name,
+            "thread_id": threadId,
+            "enduser_id": user,
+            "feedback_type": type,
+            "feedback_value": feedback
+        }
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                "x-middle-ai-api-key": this._apiKey || ""
+            },
+            body: JSON.stringify(data)
+        })
+
+        return response.ok
     }
 }
